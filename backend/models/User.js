@@ -33,6 +33,18 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Vendor Specific Fields
+    storeName: {
+      type: String,
+    },
+    bankDetails: {
+      accountNumber: String,
+      bankName: String,
+      accountHolder: String,
+    },
+    productCategories: {
+      type: [String],
+    },
   },
   {
     timestamps: true,

@@ -52,10 +52,10 @@ const registerCustomer = async (req, res) => {
 // @access  Public
 const registerSeller = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, storeName, bankDetails, productCategories } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Please provide all fields' });
+    if (!name || !email || !password || !storeName) {
+      return res.status(400).json({ message: 'Name, email, password and store name are required' });
     }
 
     const userExists = await User.findOne({ email });
@@ -69,7 +69,10 @@ const registerSeller = async (req, res) => {
       email,
       password,
       role: 'seller',
-      isVerified: false // Sellers typically need manual verification by admin
+      isVerified: false, // Sellers typically need manual verification by admin
+      storeName,
+      bankDetails,
+      productCategories
     });
 
     if (user) {
