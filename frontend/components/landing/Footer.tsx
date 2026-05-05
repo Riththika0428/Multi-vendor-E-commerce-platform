@@ -4,7 +4,11 @@ import { ShoppingBag, Globe, Mail, Phone, MapPin, ArrowRight, Sparkles } from 'l
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/useAuthStore';
 
-export default function Footer() {
+interface FooterProps {
+  showCTA?: boolean;
+}
+
+export default function Footer({ showCTA = false }: FooterProps) {
   const currentYear = new Date().getFullYear();
   const { openAuthModal } = useAuthStore();
 
@@ -12,7 +16,8 @@ export default function Footer() {
     <footer className="bg-slate-950 text-white relative overflow-hidden">
       
       {/* Integrated CTA Section */}
-      <div className="relative border-b border-white/5 overflow-hidden">
+      {showCTA && (
+        <div className="relative border-b border-white/5 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/20 to-violet-900/20 pointer-events-none" />
         
         <div className="container mx-auto px-4 py-24 relative z-10">
@@ -55,21 +60,44 @@ export default function Footer() {
             </div>
 
             <div className="hidden lg:block relative">
-              <div className="absolute -inset-10 bg-indigo-600/20 blur-[100px] rounded-full" />
-              <div className="relative bg-white/5 border border-white/10 p-8 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl">
+              <div className="absolute -inset-10 bg-indigo-600/30 blur-[120px] rounded-full animate-pulse" />
+              <div className="relative bg-white/[0.03] border border-white/10 p-4 rounded-[3.5rem] backdrop-blur-3xl shadow-2xl overflow-hidden group">
                 <div className="grid grid-cols-2 gap-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="aspect-square bg-slate-800 rounded-2xl animate-pulse" />
+                  {[
+                    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=400&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=400&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=400&auto=format&fit=crop"
+                  ].map((url, i) => (
+                    <motion.div 
+                      key={i} 
+                      whileHover={{ scale: 1.05 }}
+                      className="aspect-square bg-slate-800 rounded-[2rem] overflow-hidden border border-white/5"
+                    >
+                      <img src={url} alt="Product" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    </motion.div>
                   ))}
                 </div>
-                <div className="absolute -bottom-6 -right-6 bg-indigo-600 p-6 rounded-3xl shadow-2xl rotate-6">
-                  <ShoppingBag className="w-8 h-8 text-white" />
-                </div>
+                <motion.div 
+                  initial={{ rotate: 6 }}
+                  animate={{ rotate: [6, 12, 6] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -bottom-6 -right-6 bg-white text-slate-950 p-6 rounded-[2.5rem] shadow-3xl flex items-center gap-4 border-8 border-slate-950"
+                >
+                  <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <ShoppingBag className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">Global Payouts</p>
+                    <p className="text-lg font-black leading-none">$1.2M+</p>
+                  </div>
+                </motion.div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Main Footer Links */}
       <div className="container mx-auto px-4 pt-24 pb-12">

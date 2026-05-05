@@ -24,7 +24,7 @@ export default function Home() {
         <Categories />
         <HowItWorks />
       </main>
-      <Footer />
+      <Footer showCTA={true} />
     </div>
   );
 }
