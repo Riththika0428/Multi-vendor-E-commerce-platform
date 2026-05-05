@@ -16,6 +16,13 @@ interface AuthState {
   checkAuth: () => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
+  // Modal State
+  isAuthModalOpen: boolean;
+  authRole: 'customer' | 'seller';
+  authTab: 'login' | 'register';
+  openAuthModal: (role: 'customer' | 'seller', tab: 'login' | 'register') => void;
+  closeAuthModal: () => void;
+  setAuthTab: (tab: 'login' | 'register') => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -23,6 +30,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
   error: null,
   
+  // Modal State
+  isAuthModalOpen: false,
+  authRole: 'customer',
+  authTab: 'login',
+
+  openAuthModal: (role, tab) => set({ isAuthModalOpen: true, authRole: role, authTab: tab }),
+  closeAuthModal: () => set({ isAuthModalOpen: false }),
+  setAuthTab: (tab) => set({ authTab: tab }),
+
   setUser: (user) => set({ user, isLoading: false }),
 
   checkAuth: async () => {
@@ -30,7 +46,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await api.get('/auth/me');
       set({ user: response.data, isLoading: false });
-    } catch (error) {
+    } catch {
       set({ user: null, isLoading: false });
     }
   },
@@ -40,8 +56,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await api.post('/auth/logout');
       set({ user: null, isLoading: false, error: null });
-    } catch (error: any) {
-      set({ error: error.response?.data?.message || 'Logout failed', isLoading: false });
+    } catch (error: unknown) {
+      set({ error: (error as any).response?.data?.message || 'Logout failed', isLoading: false });
     }
   },
 }));

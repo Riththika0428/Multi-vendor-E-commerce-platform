@@ -1,6 +1,7 @@
 "use client";
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import AuthModal from './auth/AuthModal';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // During development, replace 'placeholder-id' with your actual Google Client ID
@@ -9,6 +10,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <GoogleOAuthProvider clientId={clientId}>
       {children}
+      <AuthModal />
     </GoogleOAuthProvider>
   );
 }
