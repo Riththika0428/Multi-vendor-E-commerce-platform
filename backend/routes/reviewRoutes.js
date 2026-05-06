@@ -77,4 +77,24 @@ router.get('/product/:productId', async (req, res) => {
   }
 });
 
+// @desc    Get all reviews for seller's products
+// @route   GET /api/reviews/seller
+// @access  Private/Seller
+router.get('/seller', protect, authorize('seller'), async (req, res) => {
+  try {
+    // 1. Get all product IDs for this seller
+    const products = await Product.find({ vendor: req.user._id }).select('_id');
+    const productIds = products.map(p => p._id);
+
+    // 2. Find reviews for these products
+    const reviews = await Review.find({ product: { $in: productIds } })
+      .populate('product', 'name images')
+      .sort({ createdAt: -1 });
+
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

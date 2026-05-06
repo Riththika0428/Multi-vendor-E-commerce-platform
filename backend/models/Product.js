@@ -54,6 +54,10 @@ const productSchema = new mongoose.Schema({
   numOfReviews: {
     type: Number,
     default: 0
+  },
+  isApproved: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true

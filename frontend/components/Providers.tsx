@@ -2,6 +2,7 @@
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import AuthModal from './auth/AuthModal';
+import { Toaster } from 'react-hot-toast';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // During development, replace 'placeholder-id' with your actual Google Client ID
@@ -11,6 +12,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <GoogleOAuthProvider clientId={clientId}>
       {children}
       <AuthModal />
+      <Toaster position="bottom-right" />
     </GoogleOAuthProvider>
   );
 }

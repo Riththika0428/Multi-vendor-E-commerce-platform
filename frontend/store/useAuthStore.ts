@@ -7,6 +7,18 @@ interface User {
   email: string;
   role: 'customer' | 'seller' | 'admin';
   isVerified: boolean;
+  phone?: string;
+  storeName?: string;
+  storeDescription?: string;
+  logo?: string;
+  banner?: string;
+  addresses?: Array<{
+    address: string;
+    city: string;
+    postalCode: string;
+    country: string;
+    isDefault: boolean;
+  }>;
 }
 
 interface AuthState {

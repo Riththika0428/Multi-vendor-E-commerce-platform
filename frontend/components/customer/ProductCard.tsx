@@ -1,9 +1,13 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { ShoppingCart, Star, ArrowRight } from 'lucide-react';
+import { ShoppingCart, Star, ArrowRight, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/useCartStore';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useAuthStore } from '@/store/useAuthStore';
+import { toast } from 'react-hot-toast';
 
 interface ProductCardProps {
   product: {
@@ -20,11 +24,55 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCartStore();
+  const { user, openAuthModal } = useAuthStore();
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!user || user.role !== 'customer') return;
+      try {
+        const { data } = await axios.get('http://localhost:5000/api/wishlist', { withCredentials: true });
+        const exists = data.products.some((p: any) => p._id === product._id);
+        setIsWishlisted(exists);
+      } catch (error) {
+        console.error('Error checking wishlist:', error);
+      }
+    };
+    checkWishlist();
+  }, [user, product._id]);
+
+  const toggleWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      toast.error('Please login to save pieces');
+      openAuthModal('customer', 'login');
+      return;
+    }
+
+    if (user.role !== 'customer') {
+      toast.error('Only customers can save pieces');
+      return;
+    }
+
+    setWishlistLoading(true);
+    try {
+      await axios.post(`http://localhost:5000/api/wishlist/${product._id}`, {}, { withCredentials: true });
+      setIsWishlisted(!isWishlisted);
+      toast.success(isWishlisted ? 'Removed from collection' : 'Added to collection');
+    } catch (error) {
+      toast.error('Failed to update wishlist');
+    }
+    setWishlistLoading(false);
+  };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItem(product._id, 1);
+    toast.success('Added to cart');
   };
 
   return (
@@ -41,6 +89,15 @@ export default function ProductCard({ product }: ProductCardProps) {
           {product.category}
         </span>
       </div>
+
+      {/* Wishlist Toggle */}
+      <button 
+        onClick={toggleWishlist}
+        disabled={wishlistLoading}
+        className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-white transition-all shadow-sm group-hover:scale-110 active:scale-95"
+      >
+        <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-slate-300'}`} />
+      </button>
 
       {/* Image Container */}
       <Link href={`/products/${product._id}`} className="block relative aspect-square overflow-hidden bg-slate-50">

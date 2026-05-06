@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Minus, Plus, ShoppingCart, Star, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Star, ShieldCheck, Truck, RotateCcw, Heart } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
 import axios from 'axios';
+import { useAuthStore } from '@/store/useAuthStore';
+import { toast } from 'react-hot-toast';
 
 interface ProductDetailProps {
   product: {
@@ -28,9 +30,50 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const { addItem } = useCartStore();
+  const { user, openAuthModal } = useAuthStore();
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!user || user.role !== 'customer') return;
+      try {
+        const { data } = await axios.get('http://localhost:5000/api/wishlist', { withCredentials: true });
+        const exists = data.products.some((p: any) => p._id === product._id);
+        setIsWishlisted(exists);
+      } catch (error) {
+        console.error('Error checking wishlist:', error);
+      }
+    };
+    checkWishlist();
+  }, [user, product._id]);
+
+  const toggleWishlist = async () => {
+    if (!user) {
+      toast.error('Please login to save pieces');
+      openAuthModal('customer', 'login');
+      return;
+    }
+
+    if (user.role !== 'customer') {
+      toast.error('Only customers can save pieces');
+      return;
+    }
+
+    setWishlistLoading(true);
+    try {
+      await axios.post(`http://localhost:5000/api/wishlist/${product._id}`, {}, { withCredentials: true });
+      setIsWishlisted(!isWishlisted);
+      toast.success(isWishlisted ? 'Removed from collection' : 'Added to collection');
+    } catch (error) {
+      toast.error('Failed to update wishlist');
+    }
+    setWishlistLoading(false);
+  };
 
   const handleAddToCart = () => {
     addItem(product._id, qty);
+    toast.success('Added to cart');
   };
 
   const [reviews, setReviews] = useState<any[]>([]);
@@ -128,14 +171,23 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               </div>
             </div>
 
-            <button 
-              onClick={handleAddToCart}
-              disabled={product.stock === 0}
-              className="w-full h-20 bg-slate-950 text-white rounded-[1.5rem] font-black text-lg uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-indigo-600 transition-all shadow-2xl active:scale-[0.98] disabled:opacity-50"
-            >
-              <ShoppingCart className="w-6 h-6" />
-              {product.stock === 0 ? 'Out of Stock' : 'Add to Collection'}
-            </button>
+            <div className="flex gap-4">
+              <button 
+                onClick={handleAddToCart}
+                disabled={product.stock === 0}
+                className="flex-1 h-20 bg-slate-950 text-white rounded-[1.5rem] font-black text-lg uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-indigo-600 transition-all shadow-2xl active:scale-[0.98] disabled:opacity-50"
+              >
+                <ShoppingCart className="w-6 h-6" />
+                {product.stock === 0 ? 'Out of Stock' : 'Add to Collection'}
+              </button>
+              <button 
+                onClick={toggleWishlist}
+                disabled={wishlistLoading}
+                className="w-20 h-20 bg-white border border-slate-100 rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-slate-200/40 hover:bg-slate-50 transition-all group active:scale-95"
+              >
+                <Heart className={`w-7 h-7 transition-colors ${isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-slate-300 group-hover:text-rose-400'}`} />
+              </button>
+            </div>
           </div>
 
           {/* Badges */}

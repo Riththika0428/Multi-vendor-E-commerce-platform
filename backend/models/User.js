@@ -33,8 +33,26 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+    sellerStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
     // Vendor Specific Fields
     storeName: {
+      type: String,
+    },
+    storeDescription: {
+      type: String,
+    },
+    logo: {
+      type: String,
+    },
+    banner: {
       type: String,
     },
     bankDetails: {
@@ -45,6 +63,21 @@ const userSchema = new mongoose.Schema(
     productCategories: {
       type: [String],
     },
+    phone: {
+      type: String,
+    },
+    addresses: [
+      {
+        address: String,
+        city: String,
+        postalCode: String,
+        country: String,
+        isDefault: {
+          type: Boolean,
+          default: false
+        }
+      }
+    ],
   },
   {
     timestamps: true,
