@@ -11,7 +11,9 @@ import {
   Package,
   Truck,
   ArrowUpRight,
-  Filter
+  Filter,
+  User,
+  Calendar
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,7 +30,7 @@ export default function SellerOrders() {
       setOrders(data);
     } catch (error) {
       console.error(error);
-      toast.error('Failed to sync master records');
+      toast.error('Failed to load orders');
     }
     setLoading(false);
   };
@@ -41,27 +43,33 @@ export default function SellerOrders() {
     ? orders 
     : orders.filter(o => o.status === filter);
 
-  const getStatusIcon = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'delivered': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-      case 'shipped': return <Truck className="w-4 h-4 text-indigo-500" />;
-      default: return <Clock className="w-4 h-4 text-amber-500" />;
+      case 'delivered': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+      case 'shipped': return 'bg-blue-50 text-blue-600 border-blue-100';
+      case 'paid': return 'bg-purple-50 text-purple-600 border-purple-100';
+      default: return 'bg-amber-50 text-amber-600 border-amber-100';
     }
   };
 
   return (
-    <div className="space-y-12">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-8"
+    >
+      {/* Header & Filters */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-           <h1 className="text-5xl font-black text-slate-900 tracking-tighter mb-2">Master Records</h1>
-           <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Fulfillment lifecycle tracking</p>
+           <h1 className="text-2xl font-bold text-slate-900 mb-1">Orders Management</h1>
+           <p className="text-sm font-medium text-slate-400">Track and fulfill your customer orders</p>
         </div>
-        <div className="flex items-center gap-3 bg-white p-2 border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 bg-white p-1.5 border border-slate-200 rounded-2xl shadow-sm">
            {['all', 'pending', 'paid', 'delivered'].map((f) => (
              <button 
                key={f}
                onClick={() => setFilter(f)}
-               className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-slate-950 text-white shadow-lg shadow-slate-200' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'}`}
+               className={`px-5 py-2 rounded-xl text-xs font-bold capitalize transition-all ${filter === f ? 'bg-[#0052FF] text-white shadow-md' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'}`}
              >
                {f}
              </button>
@@ -72,71 +80,81 @@ export default function SellerOrders() {
       <div className="grid gap-6">
          <AnimatePresence mode="popLayout">
             {loading ? (
-               [1,2,3].map(i => <div key={i} className="h-44 bg-white animate-pulse rounded-[3rem]" />)
+               [1,2,3].map(i => <div key={i} className="h-44 bg-white animate-pulse rounded-3xl" />)
             ) : filteredOrders.length > 0 ? filteredOrders.map((order) => (
               <motion.div 
                 key={order._id}
                 layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/20 flex flex-col lg:flex-row lg:items-center justify-between gap-10 group hover:border-indigo-100 transition-all"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col lg:flex-row lg:items-center gap-8 group hover:border-[#0052FF]/20 transition-all hover:shadow-md"
               >
+                 {/* Order Info */}
                  <div className="flex-1 space-y-6">
-                    <div className="flex items-center gap-4">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Entry: <span className="text-slate-900">#{order._id.slice(-8).toUpperCase()}</span></p>
-                       <div className="w-[1px] h-3 bg-slate-200" />
-                       <div className="flex items-center gap-2">
-                          {getStatusIcon(order.status)}
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">{order.status}</span>
+                    <div className="flex flex-wrap items-center gap-4">
+                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">#{order._id.slice(-8).toUpperCase()}</span>
+                       <div className="w-[1px] h-3 bg-slate-200 hidden sm:block" />
+                       <div className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider ${getStatusColor(order.status)}`}>
+                          {order.status}
+                       </div>
+                       <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                        </div>
                     </div>
 
                     <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
                        {order.orderItems.map((item: any, i: number) => (
-                         <div key={i} className="flex items-center gap-4 bg-slate-50 p-2 pr-6 rounded-2xl border border-slate-100/50">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-white border border-slate-100">
+                         <div key={i} className="flex items-center gap-3 bg-slate-50 p-2 pr-4 rounded-xl border border-slate-100 min-w-fit">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-slate-100 flex-shrink-0">
                                <img src={item.image} alt="" className="w-full h-full object-cover" />
                             </div>
                             <div className="min-w-0">
-                               <p className="text-xs font-black text-slate-900 truncate max-w-[120px]">{item.name}</p>
-                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Qty: {item.qty}</p>
+                               <p className="text-xs font-bold text-slate-900 truncate max-w-[120px]">{item.name}</p>
+                               <p className="text-[10px] font-medium text-slate-400">Qty: {item.qty} × ${item.price}</p>
                             </div>
                          </div>
                        ))}
                     </div>
                  </div>
 
-                 <div className="flex flex-col md:flex-row lg:flex-col items-end gap-6 lg:gap-4 border-t lg:border-t-0 pt-6 lg:pt-0">
-                    <div className="text-right">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Acquisition Point</p>
-                       <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center font-black text-xs text-slate-400 border border-slate-100">
-                             {order.user?.name?.charAt(0) || 'C'}
-                          </div>
-                          <p className="text-sm font-black text-slate-900">{order.user?.name || 'Anonymous Collector'}</p>
+                 {/* Customer & Price */}
+                 <div className="flex flex-col sm:flex-row lg:flex-row items-start sm:items-center lg:items-center gap-8 pt-6 lg:pt-0 border-t lg:border-t-0 border-slate-50">
+                    <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-full bg-[#0052FF]/5 flex items-center justify-center font-bold text-sm text-[#0052FF] border border-[#0052FF]/10">
+                          {order.user?.name?.charAt(0) || 'U'}
+                       </div>
+                       <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Customer</p>
+                          <p className="text-xs font-bold text-slate-900">{order.user?.name || 'Guest User'}</p>
                        </div>
                     </div>
-                    <div className="h-[1px] w-full bg-slate-50 hidden lg:block" />
-                    <div className="flex items-center gap-8">
-                       <div className="text-right">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Entry Value</p>
-                          <p className="text-3xl font-black text-slate-900 tracking-tighter">${order.totalPrice.toLocaleString()}</p>
+
+                    <div className="flex items-center gap-6">
+                       <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Total Amount</p>
+                          <p className="text-xl font-bold text-slate-900">${order.totalPrice.toLocaleString()}</p>
                        </div>
-                       <Link href={`/seller/orders/${order._id}`} className="w-14 h-14 bg-slate-950 text-white rounded-2xl flex items-center justify-center hover:bg-indigo-600 transition-all shadow-xl active:scale-90">
-                          <ArrowUpRight className="w-6 h-6" />
+                       <Link 
+                         href={`/seller/orders/${order._id}`} 
+                         className="w-12 h-12 bg-white border border-slate-200 text-slate-400 rounded-xl flex items-center justify-center hover:bg-[#0052FF] hover:text-white hover:border-[#0052FF] transition-all shadow-sm active:scale-95 group"
+                       >
+                          <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
                        </Link>
                     </div>
                  </div>
               </motion.div>
             )) : (
-              <div className="py-40 bg-white rounded-[4rem] text-center border-2 border-dashed border-slate-100 flex flex-col items-center justify-center">
-                 <Package className="w-16 h-16 text-slate-200 mb-6" />
-                 <h2 className="text-2xl font-black text-slate-900 mb-2">No Acquisitions detected</h2>
-                 <p className="text-slate-400 font-medium max-w-xs mx-auto text-sm leading-relaxed">System is currently in monitoring mode. New entries will appear automatically.</p>
+              <div className="py-32 bg-white rounded-3xl text-center border border-dashed border-slate-200 flex flex-col items-center justify-center">
+                 <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-6">
+                    <ShoppingBag className="w-8 h-8 text-slate-300" />
+                 </div>
+                 <h2 className="text-lg font-bold text-slate-900 mb-1">No orders found</h2>
+                 <p className="text-sm font-medium text-slate-400 max-w-xs mx-auto">When customers purchase your products, they will appear here for fulfillment.</p>
               </div>
             )}
          </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }

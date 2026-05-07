@@ -134,6 +134,31 @@ router.get('/my', protect, authorize('customer'), async (req, res) => {
   }
 });
 
+// @desc    Get orders for a specific seller
+// @route   GET /api/orders/seller
+// @access  Private/Seller
+router.get('/seller', protect, authorize('seller'), async (req, res) => {
+  try {
+    // Find orders that contain products from this seller
+    const orders = await Order.find({
+      'orderItems.vendor': req.user._id
+    }).populate('user', 'name email').sort({ createdAt: -1 });
+
+    // Filter orderItems to only show this seller's products (optional but better)
+    const sellerOrders = orders.map(order => {
+       const filteredItems = order.orderItems.filter(item => item.vendor?.toString() === req.user._id.toString());
+       return {
+         ...order.toObject(),
+         orderItems: filteredItems
+       };
+    });
+
+    res.json(sellerOrders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // @desc    Get order by ID
 // @route   GET /api/orders/:id
 // @access  Private/Customer/Seller
@@ -159,31 +184,6 @@ router.get('/:id', protect, authorize('customer', 'seller'), async (req, res) =>
     } else {
       res.status(404).json({ message: 'Order not found' });
     }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// @desc    Get orders for a specific seller
-// @route   GET /api/orders/seller
-// @access  Private/Seller
-router.get('/seller', protect, authorize('seller'), async (req, res) => {
-  try {
-    // Find orders that contain products from this seller
-    const orders = await Order.find({
-      'orderItems.vendor': req.user._id
-    }).populate('user', 'name email').sort({ createdAt: -1 });
-
-    // Filter orderItems to only show this seller's products (optional but better)
-    const sellerOrders = orders.map(order => {
-       const filteredItems = order.orderItems.filter(item => item.vendor?.toString() === req.user._id.toString());
-       return {
-         ...order.toObject(),
-         orderItems: filteredItems
-       };
-    });
-
-    res.json(sellerOrders);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

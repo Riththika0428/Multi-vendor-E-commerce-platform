@@ -11,10 +11,13 @@ import {
   Save, 
   ShieldCheck,
   Layout,
-  Globe
+  Globe,
+  Camera,
+  Mail,
+  Info
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 
 export default function StoreSettings() {
@@ -33,161 +36,177 @@ export default function StoreSettings() {
     setLoading(true);
     try {
       await axios.put('http://localhost:5000/api/auth/profile', formData, { withCredentials: true });
-      toast.success('Marketplace identity updated');
+      toast.success('Store profile updated successfully');
       await checkAuth();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Identity verification failed');
+      toast.error(error.response?.data?.message || 'Failed to update profile');
     }
     setLoading(false);
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12 pb-20">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="max-w-6xl mx-auto space-y-8 pb-20"
+    >
       <div>
-        <h1 className="text-5xl font-black text-slate-900 tracking-tighter mb-2">Identity Hub</h1>
-        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Merchant profile and store branding</p>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">Store Profile</h1>
+        <p className="text-sm font-medium text-slate-400">Customize your store's public appearance and contact details</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-12">
-        {/* Branding Section */}
-        <section className="bg-white rounded-[4rem] border border-slate-100 shadow-2xl shadow-slate-200/20 overflow-hidden">
-           <div className="h-64 bg-slate-100 relative group overflow-hidden">
-              <img src={formData.banner || 'https://via.placeholder.com/1200x400?text=Store+Banner'} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Store Banner" />
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                 <button type="button" className="p-4 bg-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95">Replace Banner Area</button>
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Branding Preview Section */}
+        <section className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+           {/* Banner */}
+           <div className="h-48 bg-slate-100 relative group overflow-hidden">
+              <img 
+                src={formData.banner || 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=1200'} 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                alt="Store Banner" 
+              />
+              <div className="absolute inset-x-8 bottom-4 flex justify-end">
+                 <button type="button" className="inline-flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-md text-white border border-white/20 rounded-xl font-bold text-xs hover:bg-black/60 transition-all">
+                    <Camera className="w-3.5 h-3.5" /> Edit Banner
+                 </button>
               </div>
            </div>
            
-           <div className="p-12 pt-0 -mt-16 flex flex-col md:flex-row items-end gap-10">
+           {/* Logo and Name Area */}
+           <div className="px-8 pb-8 pt-0 -mt-10 flex flex-col md:flex-row items-end gap-6 relative z-10">
               <div className="relative group">
-                 <div className="w-44 h-44 rounded-[2.5rem] bg-white p-3 border-8 border-[#fafbfc] overflow-hidden shadow-2xl relative z-10">
-                    <img src={formData.logo || 'https://via.placeholder.com/200?text=Logo'} className="w-full h-full object-cover rounded-3xl" alt="Store Logo" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
-                       <button type="button" className="w-full py-2 bg-white rounded-lg text-[8px] font-black uppercase tracking-widest active:scale-95">Update</button>
+                 <div className="w-32 h-32 rounded-3xl bg-white p-2 border-4 border-white shadow-lg overflow-hidden">
+                    <img 
+                      src={formData.logo || 'https://images.unsplash.com/photo-1599305090748-36656ca89d7d?q=80&w=200'} 
+                      className="w-full h-full object-cover rounded-2xl" 
+                      alt="Store Logo" 
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
+                       <button type="button" className="p-2 bg-white rounded-lg text-[#0052FF] transition-all hover:scale-110">
+                          <Camera className="w-4 h-4" />
+                       </button>
                     </div>
                  </div>
               </div>
-              <div className="flex-1 pb-4">
-                 <h2 className="text-3xl font-black text-slate-900 tracking-tight">{formData.storeName || 'Merchant Name'}</h2>
-                 <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">Verified Professional Stream</p>
-              </div>
-              <div className="flex items-center gap-2 pb-4">
-                 <div className="flex -space-x-4">
-                    {[1,2,3].map(i => <div key={i} className="w-10 h-10 rounded-full border-4 border-white bg-slate-100 shadow-sm" />)}
-                 </div>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">1.2k Followers</span>
+              <div className="flex-1 pb-2">
+                 <h2 className="text-2xl font-bold text-slate-900">{formData.storeName || 'My Super Store'}</h2>
+                 <p className="text-sm font-medium text-[#0052FF] flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4" /> Verified Merchant
+                 </p>
               </div>
            </div>
         </section>
 
-        {/* Global Settings */}
-        <div className="grid lg:grid-cols-2 gap-12">
-            <section className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-2xl shadow-slate-200/20 space-y-10">
-                <div className="flex items-center gap-4 mb-2">
-                   <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-100/50">
-                      <Store className="w-6 h-6" />
-                   </div>
-                   <h2 className="text-2xl font-black text-slate-900 tracking-tight">Public Presence</h2>
-                </div>
+        {/* Form Fields Section */}
+        <div className="grid lg:grid-cols-2 gap-8">
+            {/* General Info */}
+            <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                <h3 className="text-md font-bold text-slate-900 flex items-center gap-2 mb-4">
+                   <Info className="w-4 h-4 text-slate-400" /> General Information
+                </h3>
 
-                <div className="space-y-6">
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2 group-focus-within:text-indigo-600 transition-colors">Merchant Alias</label>
+                <div className="space-y-5">
+                   <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 ml-1">Store Name</label>
                       <input 
                         type="text" 
                         value={formData.storeName}
                         onChange={(e) => setFormData({...formData, storeName: e.target.value})}
-                        className="w-full p-5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-4 focus:ring-indigo-50/50 transition-all outline-none"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:ring-4 focus:ring-[#0052FF]/10 focus:border-[#0052FF] transition-all outline-none"
+                        placeholder="Enter your store name"
                       />
                    </div>
 
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2 group-focus-within:text-indigo-600 transition-colors">Merchant Bio</label>
+                   <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 ml-1">Store Description</label>
                       <textarea 
-                        rows={5}
+                        rows={4}
                         value={formData.storeDescription}
                         onChange={(e) => setFormData({...formData, storeDescription: e.target.value})}
-                        className="w-full p-6 bg-slate-50 border-none rounded-[2rem] text-sm font-bold text-slate-900 focus:bg-white focus:ring-4 focus:ring-indigo-50/50 transition-all outline-none resize-none"
-                        placeholder="Define your merchant philosophy..."
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium text-slate-600 focus:bg-white focus:ring-4 focus:ring-[#0052FF]/10 focus:border-[#0052FF] transition-all outline-none resize-none leading-relaxed"
+                        placeholder="Describe your store and products..."
                       />
                    </div>
                 </div>
             </section>
 
-            <div className="space-y-12">
-               <section className="bg-slate-950 p-12 rounded-[4rem] text-white shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-indigo-600 rounded-full blur-[80px] opacity-30" />
-                  <div className="relative z-10 space-y-10">
-                    <div className="flex items-center justify-between">
-                       <h2 className="text-2xl font-black tracking-tight flex items-center gap-4">
-                          <Globe className="w-6 h-6 text-indigo-400" /> Infrastructure
-                       </h2>
-                    </div>
+            {/* Contact & Assets */}
+            <div className="space-y-8">
+               <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                  <h3 className="text-md font-bold text-slate-900 flex items-center gap-2 mb-4">
+                     <Mail className="w-4 h-4 text-slate-400" /> Contact Details
+                  </h3>
 
-                    <div className="space-y-6">
-                       <div className="space-y-2 group">
-                          <div className="flex items-center gap-2 mb-2">
-                             <Phone className="w-3.5 h-3.5 text-slate-500" />
-                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Secure Line</label>
-                          </div>
-                          <input 
-                            type="text" 
-                            value={formData.phone}
-                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                            className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-sm font-black text-white focus:bg-white/10 outline-none transition-all placeholder:text-white/20"
-                            placeholder="+1 234 567 890"
-                          />
-                       </div>
+                  <div className="space-y-5">
+                     <div className="space-y-1.5 group">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 ml-1">Public Phone Number</label>
+                        <div className="relative">
+                           <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                           <input 
+                             type="text" 
+                             value={formData.phone}
+                             onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                             className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:ring-4 focus:ring-[#0052FF]/10 focus:border-[#0052FF] outline-none transition-all"
+                             placeholder="+1 (234) 567-890"
+                           />
+                        </div>
+                     </div>
 
-                       <div className="space-y-2 group">
-                          <div className="flex items-center gap-2 mb-2">
-                             <Layout className="w-3.5 h-3.5 text-slate-500" />
-                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Banner Asset URI</label>
-                          </div>
-                          <input 
-                            type="text" 
-                            value={formData.banner}
-                            onChange={(e) => setFormData({...formData, banner: e.target.value})}
-                            className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-sm font-black text-white focus:bg-white/10 outline-none transition-all"
-                            placeholder="https://..."
-                          />
-                       </div>
+                     <div className="space-y-1.5 group">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 ml-1">Banner Image URL</label>
+                        <div className="relative">
+                           <Layout className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                           <input 
+                             type="text" 
+                             value={formData.banner}
+                             onChange={(e) => setFormData({...formData, banner: e.target.value})}
+                             className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:ring-4 focus:ring-[#0052FF]/10 focus:border-[#0052FF] outline-none transition-all"
+                             placeholder="https://images.unsplash.com/..."
+                           />
+                        </div>
+                     </div>
 
-                       <div className="space-y-2 group">
-                          <div className="flex items-center gap-2 mb-2">
-                             <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
-                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Logo Asset URI</label>
-                          </div>
-                          <input 
-                            type="text" 
-                            value={formData.logo}
-                            onChange={(e) => setFormData({...formData, logo: e.target.value})}
-                            className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-sm font-black text-white focus:bg-white/10 outline-none transition-all"
-                            placeholder="https://..."
-                          />
-                       </div>
-                    </div>
-
-                    <button 
-                      type="submit" 
-                      disabled={loading}
-                      className="w-full py-6 bg-indigo-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-white hover:text-indigo-600 transition-all shadow-xl shadow-indigo-900/40 active:scale-[0.98] disabled:opacity-50"
-                    >
-                       <Save className="w-5 h-5" /> {loading ? 'Transmitting...' : 'Authorize Updates'}
-                    </button>
+                     <div className="space-y-1.5 group">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 ml-1">Logo Image URL</label>
+                        <div className="relative">
+                           <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                           <input 
+                             type="text" 
+                             value={formData.logo}
+                             onChange={(e) => setFormData({...formData, logo: e.target.value})}
+                             className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:ring-4 focus:ring-[#0052FF]/10 focus:border-[#0052FF] outline-none transition-all"
+                             placeholder="https://images.unsplash.com/..."
+                           />
+                        </div>
+                     </div>
                   </div>
                </section>
 
-               <div className="p-10 bg-slate-50 border border-slate-100 rounded-[3rem] text-center">
-                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center mx-auto mb-6">
-                     <ShieldCheck className="w-6 h-6 text-emerald-500" />
+               <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3">
+                     <ShieldCheck className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                     <p className="text-[10px] font-medium text-emerald-700 leading-tight">Your data is secure and will only be shown on your public profile.</p>
                   </div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 leading-relaxed">Merchant Protection Active</p>
-                  <p className="text-[9px] font-bold text-slate-400 italic px-4">All identity updates are logged and encrypted within our core distributed ledger.</p>
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="px-8 py-4 bg-[#0052FF] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#0041CC] transition-all shadow-lg shadow-[#0052FF]/20 active:scale-[0.98] disabled:opacity-50 min-w-[180px]"
+                  >
+                     {loading ? (
+                        <>
+                           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                           Saving...
+                        </>
+                     ) : (
+                        <>
+                           <Save className="w-4 h-4" /> Save Changes
+                        </>
+                     )}
+                  </button>
                </div>
             </div>
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 }
