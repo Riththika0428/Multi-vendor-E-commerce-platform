@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Package, MapPin, CreditCard, Star } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, CreditCard, Star, Clock, CheckCircle, Truck, AlertCircle, Sparkles, MessageSquare, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 
@@ -41,107 +41,162 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     }
   };
 
+  const getStatusStyle = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'delivered': return 'bg-green-500 text-white shadow-lg shadow-green-100';
+      case 'shipped': return 'bg-indigo-500 text-white shadow-lg shadow-indigo-100';
+      case 'processing': return 'bg-amber-500 text-white shadow-lg shadow-amber-100';
+      default: return 'bg-slate-400 text-white shadow-lg shadow-slate-100';
+    }
+  };
+
   return (
-    <div className="space-y-10">
-      <Link href="/customer/orders" className="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-bold mb-4 transition-colors group">
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        Back to History
+    <div className="space-y-12 pb-20">
+      <Link href="/customer/orders" className="inline-flex items-center gap-4 text-slate-400 hover:text-indigo-600 font-black text-[10px] uppercase tracking-[0.2em] mb-4 transition-all group">
+        <div className="w-10 h-10 bg-white rounded-xl border border-slate-100 flex items-center justify-center shadow-sm group-hover:border-indigo-100 group-hover:shadow-indigo-50">
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        </div>
+        Return to History
       </Link>
 
       {loading ? (
-          <div className="animate-pulse space-y-10">
-            <div className="h-20 bg-white rounded-[2rem] w-3/4" />
-            <div className="h-64 bg-white rounded-[3rem]" />
+          <div className="animate-pulse space-y-12">
+            <div className="h-24 bg-white/60 rounded-[2.5rem] w-3/4" />
+            <div className="grid lg:grid-cols-3 gap-12">
+              <div className="lg:col-span-2 h-96 bg-white/60 rounded-[3.5rem]" />
+              <div className="h-96 bg-white/60 rounded-[3.5rem]" />
+            </div>
           </div>
       ) : order ? (
-        <div className="space-y-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-12">
+          {/* Header Dashboard */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
               <div>
-                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-2">Order Tracking</h1>
-                <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Reference: {order._id.toUpperCase()}</p>
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-3 mb-4"
+                >
+                  <span className="w-12 h-[2px] bg-indigo-600 rounded-full" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Procurement Status</span>
+                </motion.div>
+                <h1 className="text-6xl font-black text-slate-900 tracking-tighter">Order Tracking</h1>
+                <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[11px] mt-2">Ref: {order._id.toUpperCase()}</p>
               </div>
-              <div className={`px-6 py-3 rounded-2xl font-black text-sm uppercase tracking-widest ${order.isPaid ? 'bg-green-500 text-white shadow-xl shadow-green-100' : 'bg-orange-500 text-white shadow-xl shadow-orange-100'}`}>
-                {order.status}
+              <div className="flex items-center gap-4">
+                 <div className={`px-8 py-4 rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] flex items-center gap-3 shadow-2xl ${getStatusStyle(order.status)}`}>
+                    <Package className="w-4 h-4" />
+                    {order.status}
+                 </div>
               </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-10">
-              <div className="lg:col-span-2 space-y-8">
-                {/* Products List */}
-                <section className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/20">
-                    <h2 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
-                      <Package className="w-5 h-5 text-indigo-600" /> Items in this Order
+          <div className="grid lg:grid-cols-3 gap-12">
+              <div className="lg:col-span-2 space-y-10">
+                {/* Items Analytics */}
+                <section className="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-2xl shadow-slate-200/20 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none" />
+                    
+                    <h2 className="text-2xl font-black text-slate-900 mb-10 flex items-center gap-4">
+                      <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                        <Package className="w-6 h-6" />
+                      </div>
+                      Procured Artifacts
                     </h2>
-                    <div className="space-y-8">
+
+                    <div className="space-y-10">
                       {order.orderItems.map((item: any, i: number) => (
-                          <div key={i} className="flex items-center gap-6 group">
-                            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0">
-                                <img src={item.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          <motion.div 
+                            key={i} 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.1 }}
+                            className="flex flex-col sm:flex-row sm:items-center gap-8 group"
+                          >
+                            <div className="w-32 h-32 rounded-[2rem] overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0 shadow-inner">
+                                <img src={item.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-lg font-black text-slate-900 mb-1">{item.name}</h3>
-                                <p className="text-xs font-bold text-slate-400">Qty: {item.qty} × ${item.price.toFixed(2)}</p>
-                                
-                                {order.status === 'delivered' && (
-                                  <button 
-                                    onClick={() => setReviewForm({ productId: item.product, rating: 5, comment: '' })}
-                                    className="mt-3 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 flex items-center gap-2"
-                                  >
-                                    <Star className="w-3 h-3" /> Review Product
-                                  </button>
-                                )}
+                                <div className="flex items-start justify-between mb-4">
+                                   <div>
+                                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500 mb-1">Authentic Selection</p>
+                                      <h3 className="text-xl font-black text-slate-900 tracking-tight">{item.name}</h3>
+                                   </div>
+                                   <p className="text-2xl font-black text-slate-900 tracking-tighter">${(item.price * item.qty).toFixed(2)}</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                   <div className="px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                      Units: {item.qty}
+                                   </div>
+                                   {order.status === 'delivered' && (
+                                      <button 
+                                        onClick={() => setReviewForm({ productId: item.product, rating: 5, comment: '' })}
+                                        className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-white hover:bg-slate-950 px-4 py-1.5 rounded-full transition-all flex items-center gap-2 border border-indigo-100"
+                                      >
+                                        <MessageSquare className="w-3 h-3" /> Share Experience
+                                      </button>
+                                   )}
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-lg font-black text-slate-900">${(item.price * item.qty).toFixed(2)}</p>
-                            </div>
-                          </div>
+                          </motion.div>
                       ))}
                     </div>
                 </section>
 
-                {/* Review Form */}
+                {/* Shared Experience Hub (Review Form) */}
                 <AnimatePresence>
                     {reviewForm && (
                       <motion.div 
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="bg-indigo-600 p-10 rounded-[3rem] text-white shadow-2xl relative overflow-hidden"
+                        initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-slate-950 p-12 rounded-[3.5rem] text-white shadow-3xl relative overflow-hidden group"
                       >
+                          <div className="absolute top-[-50%] right-[-10%] w-[60%] h-[200%] bg-indigo-600 rounded-full blur-[140px] opacity-20 pointer-events-none transition-opacity group-hover:opacity-30" />
+                          
                           <div className="relative z-10">
-                            <h3 className="text-2xl font-black mb-6 text-white">Rate this Artifact</h3>
-                            <form onSubmit={submitReview} className="space-y-6">
+                            <div className="flex items-center gap-4 mb-10">
+                               <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white backdrop-blur-md">
+                                  <Sparkles className="w-6 h-6" />
+                               </div>
+                               <div>
+                                  <h3 className="text-2xl font-black tracking-tight text-white">Curator's Insight</h3>
+                                  <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mt-1">Submit your feedback</p>
+                               </div>
+                            </div>
+
+                            <form onSubmit={submitReview} className="space-y-10">
                                 <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest mb-2 opacity-60">Score (1-5)</label>
-                                    <div className="flex gap-2">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-6 text-slate-500">Quality Score</p>
+                                    <div className="flex gap-4">
                                       {[1,2,3,4,5].map(star => (
                                           <button 
                                             key={star} 
                                             type="button"
                                             onClick={() => setReviewForm({...reviewForm, rating: star})}
-                                            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${reviewForm.rating >= star ? 'bg-white text-indigo-600 shadow-lg' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                                            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${reviewForm.rating >= star ? 'bg-indigo-600 text-white shadow-[0_0_40px_rgba(79,70,229,0.4)] scale-110' : 'bg-white/5 text-slate-500 hover:bg-white/10'}`}
                                           >
-                                              <Star className={`w-5 h-5 ${reviewForm.rating >= star ? 'fill-current' : ''}`} />
+                                              <Star className={`w-6 h-6 ${reviewForm.rating >= star ? 'fill-current' : ''}`} />
                                           </button>
                                       ))}
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest mb-2 opacity-60">Experience Details</label>
+                                <div className="space-y-4">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Commentary</p>
                                     <textarea 
                                       required 
                                       value={reviewForm.comment}
                                       onChange={e => setReviewForm({...reviewForm, comment: e.target.value})}
-                                      className="w-full p-6 bg-white/10 border border-white/20 rounded-[2rem] outline-none focus:bg-white/20 placeholder:text-white/40 text-white min-h-[120px]"
-                                      placeholder="How does it feel in your space?"
+                                      className="w-full p-8 bg-white/5 border border-white/10 rounded-[2.5rem] outline-none focus:bg-white/10 focus:border-indigo-500/50 placeholder:text-slate-600 text-sm font-medium min-h-[160px] transition-all"
+                                      placeholder="Express how this piece integrates with your collection..."
                                     />
                                 </div>
-                                <div className="flex gap-4">
-                                    <button type="submit" className="flex-1 py-4 bg-white text-indigo-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-50 transition-all shadow-xl active:scale-95">
-                                      Submit Review
+                                <div className="flex flex-col sm:flex-row gap-6">
+                                    <button type="submit" className="flex-1 py-6 bg-white text-slate-950 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-2xl active:scale-95 group">
+                                      Broadcast Review <ArrowRight className="w-5 h-5 inline-block ml-3 group-hover:translate-x-2 transition-transform" />
                                     </button>
-                                    <button type="button" onClick={() => setReviewForm(null)} className="px-6 py-4 border border-white/20 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-white/10">
-                                      Skip
+                                    <button type="button" onClick={() => setReviewForm(null)} className="px-10 py-6 bg-slate-900 text-slate-400 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:text-white transition-all">
+                                      Discard
                                     </button>
                                 </div>
                             </form>
@@ -151,47 +206,66 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 </AnimatePresence>
               </div>
 
-              <aside className="lg:col-span-1 space-y-8">
-                <div className="bg-slate-950 p-8 rounded-[2.5rem] text-white shadow-2xl space-y-8 sticky top-32">
+              <aside className="lg:col-span-1 space-y-12">
+                {/* Global Logistics Sidebar */}
+                <div className="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-2xl shadow-slate-200/20 space-y-12 sticky top-32">
                     <section>
-                      <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-                          <MapPin className="w-3.5 h-3.5" /> Destination
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500 mb-6 flex items-center gap-3">
+                          <MapPin className="w-4 h-4" /> Logistical Node
                       </h3>
-                      <p className="font-bold text-sm leading-relaxed text-slate-200">
-                          {order.shippingAddress.address}<br />
-                          {order.shippingAddress.city}, {order.shippingAddress.postalCode}<br />
-                          {order.shippingAddress.country}
-                      </p>
+                      <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                        <p className="font-black text-sm text-slate-900 leading-relaxed">
+                            {order.shippingAddress.address}
+                        </p>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-2 px-3 py-1 bg-white inline-block rounded-lg shadow-sm">
+                            {order.shippingAddress.city}, {order.shippingAddress.postalCode}
+                        </p>
+                      </div>
                     </section>
 
                     <section>
-                      <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-                          <CreditCard className="w-3.5 h-3.5" /> Financial
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500 mb-6 flex items-center gap-3">
+                          <CreditCard className="w-4 h-4" /> Financial Ledger
                       </h3>
-                      <div className="space-y-2">
-                          <div className="flex justify-between text-xs font-bold">
-                            <span className="text-slate-500">Subtotal</span>
-                            <span className="text-slate-200">${order.itemsPrice.toFixed(2)}</span>
+                      <div className="space-y-4">
+                          <div className="flex justify-between items-center text-[11px] font-black uppercase tracking-widest">
+                            <span className="text-slate-300 italic">Core Value</span>
+                            <span className="text-slate-900">${order.itemsPrice.toFixed(2)}</span>
                           </div>
-                          <div className="flex justify-between text-xs font-bold">
-                            <span className="text-slate-500">Logistics</span>
-                            <span className="text-green-500">Free</span>
+                          <div className="flex justify-between items-center text-[11px] font-black uppercase tracking-widest">
+                            <span className="text-slate-300 italic">Logistics</span>
+                            <span className="text-green-500">Exempt</span>
                           </div>
-                          <div className="h-[1px] bg-white/10 my-4" />
-                          <div className="flex justify-between items-end">
-                            <span className="text-2xl font-black tracking-tighter text-white">${order.totalPrice.toFixed(2)}</span>
-                            <span className="text-[10px] font-black text-green-500 uppercase tracking-widest mb-1">Confirmed</span>
+                          <div className="h-[1px] bg-slate-100 my-6" />
+                          <div className="flex flex-col gap-2">
+                             <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Total Valuation</span>
+                             <div className="flex items-end justify-between">
+                                <span className="text-5xl font-black tracking-tighter text-slate-900">${order.totalPrice.toFixed(0)}</span>
+                                <div className="flex items-center gap-2 mb-2">
+                                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                                   <span className="text-[9px] font-black text-green-500 uppercase tracking-widest">Settled</span>
+                                </div>
+                             </div>
                           </div>
                       </div>
                     </section>
+
+                    <div className="pt-4">
+                       <Link href="/products" className="w-full py-5 border-2 border-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-900 hover:text-white transition-all duration-500 group">
+                          Continue Curating <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                       </Link>
+                    </div>
                 </div>
               </aside>
           </div>
         </div>
       ) : (
         <div className="text-center py-40">
-            <h2 className="text-3xl font-black text-slate-900">Order Disappeared</h2>
-            <Link href="/customer/orders" className="text-indigo-600 font-bold hover:underline mt-4 block">Return to Collection</Link>
+            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8 text-slate-200">
+               <AlertCircle className="w-12 h-12" />
+            </div>
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight">Artifact Lost in Loop</h2>
+            <Link href="/customer/orders" className="text-indigo-600 font-black text-xs uppercase tracking-widest hover:underline mt-8 block">Return to Collection Registry</Link>
         </div>
       )}
     </div>

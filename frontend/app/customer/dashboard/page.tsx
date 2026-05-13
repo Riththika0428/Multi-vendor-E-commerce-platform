@@ -2,21 +2,64 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Package, ShoppingBag, Star, ArrowRight } from 'lucide-react';
+import { 
+  Package, 
+  ShoppingBag, 
+  Star, 
+  ArrowRight, 
+  Bell, 
+  Settings, 
+  Search, 
+  MessageCircle,
+  Heart,
+  ChevronRight,
+  Flame,
+  Clock,
+  User,
+  CreditCard,
+  Truck,
+  CheckCircle
+} from 'lucide-react';
 import Link from 'next/link';
 import axios from 'axios';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Mock data for new sections
+const recentlyViewed = [
+  { id: 1, image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200&h=200&fit=crop', name: 'Spring Style' },
+  { id: 2, image: 'https://images.unsplash.com/photo-1539109132314-d49c02d82267?w=200&h=200&fit=crop', name: 'Luxe Wear' },
+  { id: 3, image: 'https://images.unsplash.com/photo-1549062572-544a64fb0c56?w=200&h=200&fit=crop', name: 'Daily Casual' },
+  { id: 4, image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=200&h=200&fit=crop', name: 'Modern Set' },
+  { id: 5, image: 'https://images.unsplash.com/photo-1475184636916-d2bb99617acc?w=200&h=200&fit=crop', name: 'Urban Look' },
+];
+
+const stories = [
+  { id: 1, image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=600&fit=crop', title: 'Trend Alert', live: true },
+  { id: 2, image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=600&fit=crop', title: 'Flash Sale', live: false },
+  { id: 3, image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400&h=600&fit=crop', title: 'New Drop', live: true },
+  { id: 4, image: 'https://images.unsplash.com/photo-1488161628813-04466f872be2?w=400&h=600&fit=crop', title: 'Style Edit', live: false },
+];
+
+const categories = [
+  { name: 'Dresses', icon: '👗' },
+  { name: 'Pants', icon: '👖' },
+  { name: 'Skirts', icon: '👗' },
+  { name: 'Shorts', icon: '🩳' },
+  { name: 'Jackets', icon: '🧥' },
+  { name: 'Hoodies', icon: '🧥' },
+];
 
 export default function CustomerDashboard() {
   const { user } = useAuthStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('To Pay');
 
   useEffect(() => {
     const fetchMyOrders = async () => {
       try {
         const { data } = await axios.get('http://localhost:5000/api/orders/my', { withCredentials: true });
-        setOrders(data.slice(0, 3)); // Just show recent 3
+        setOrders(data);
       } catch (error) {
         console.error(error);
       }
@@ -25,124 +68,242 @@ export default function CustomerDashboard() {
     fetchMyOrders();
   }, []);
 
+  const orderTabs = [
+    { label: 'To Pay', icon: CreditCard, count: orders.filter((o: any) => !o.isPaid).length },
+    { label: 'To Receive', icon: Truck, count: orders.filter((o: any) => o.isPaid && !o.isDelivered).length },
+    { label: 'To Review', icon: Star, count: orders.filter((o: any) => o.isDelivered).length },
+  ];
+
   return (
-    <div className="space-y-12">
-      {/* User Greeting Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3 mb-4"
-          >
-            <span className="w-12 h-[2px] bg-indigo-600 rounded-full" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Personal Space</span>
-          </motion.div>
-          <h1 className="text-6xl font-black text-slate-900 tracking-tight mb-3">
-            Welcome, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">{user?.name.split(' ')[0]}</span>
-          </h1>
-          <p className="text-slate-400 font-medium tracking-wide text-lg">Curating your collection of unique artifacts.</p>
-        </div>
-        
-        <div className="flex gap-3">
-          <div className="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-sm font-black text-slate-900">Premium Member</span>
+    <div className="space-y-10 pb-20">
+      {/* Top Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-5">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center text-white text-2xl font-black shadow-2xl shadow-indigo-200">
+              {user?.name.charAt(0)}
             </div>
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-[#fafbfc]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Hello, {user?.name.split(' ')[0]}!</h1>
+              <Link href="/customer/profile" className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all">
+                <button className="text-[10px] font-black uppercase tracking-widest px-2">My Activity</button>
+              </Link>
+            </div>
+            <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em]">Premium Member since 2024</p>
           </div>
         </div>
+
+        <div className="flex items-center gap-4">
+          <button className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm">
+            <Bell className="w-5 h-5" />
+          </button>
+          <button className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm">
+            <MessageCircle className="w-5 h-5" />
+          </button>
+          <Link href="/customer/profile">
+            <button className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm">
+              <Settings className="w-5 h-5" />
+            </button>
+          </Link>
+        </div>
       </div>
 
-      {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {[
-          { label: 'Total Orders', value: orders.length, color: 'from-indigo-600 to-blue-500', icon: Package },
-          { label: 'Wishlist', value: '5 items', color: 'from-violet-600 to-fuchsia-500', icon: Star },
-          { label: 'Trophy Points', value: '1,240', color: 'from-fuchsia-600 to-pink-500', icon: Star },
-        ].map((stat, i) => (
-          <motion.div 
-            key={i} 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="p-8 rounded-[2.5rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/20 relative overflow-hidden group hover:shadow-2xl hover:shadow-indigo-100 transition-all duration-500"
-          >
-            <div className={`absolute top-0 right-0 w-2 h-full bg-gradient-to-b ${stat.color} opacity-80`} />
-            <div className="flex items-start justify-between mb-6">
-              <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.color} text-white shadow-lg`}>
-                <stat.icon className="w-6 h-6" />
-              </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Live Data</p>
+      {/* Announcement/Promotion Card */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative h-48 rounded-[3rem] bg-indigo-600 text-white overflow-hidden shadow-2xl shadow-indigo-200 group"
+      >
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-500/50 to-transparent pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-400 rounded-full blur-[80px] opacity-30" />
+        <div className="relative z-10 p-10 flex flex-col justify-center h-full max-w-lg">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest">Limited Offer</div>
+            <div className="flex items-center gap-2 text-indigo-200">
+              <Clock className="w-4 h-4" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Ending Soon</span>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{stat.label}</p>
-            <p className="text-4xl font-black text-slate-900 tracking-tighter">{stat.value}</p>
-          </motion.div>
-        ))}
-      </div>
+          </div>
+          <h2 className="text-4xl font-black mb-1">20% Flash Sale</h2>
+          <p className="text-indigo-100 font-medium tracking-wide">On all summer collections reimagned for you.</p>
+        </div>
+        <div className="absolute right-12 bottom-0 top-0 flex items-center opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-xl cursor-pointer">
+            <ArrowRight className="w-8 h-8" />
+          </div>
+        </div>
+      </motion.div>
 
-      {/* Sub-Header */}
+      {/* Recently Viewed */}
       <section>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-black text-slate-900 tracking-tight">Recently viewed</h3>
+          <button className="text-indigo-600 text-[11px] font-black uppercase tracking-widest hover:underline transition-all">Clear All</button>
+        </div>
+        <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
+          {recentlyViewed.map((item, i) => (
+            <motion.div 
+              key={item.id}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.1 }}
+              className="flex-shrink-0 group cursor-pointer"
+            >
+              <div className="w-20 h-20 rounded-[1.5rem] p-1 border-2 border-slate-100 group-hover:border-indigo-600 transition-all duration-500 overflow-hidden shadow-sm">
+                <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-[1.25rem] group-hover:scale-110 transition-transform duration-500" />
+              </div>
+              <p className="text-[10px] font-bold text-center text-slate-400 mt-2 truncate w-20">{item.name}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* My Orders Section */}
+      <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/20">
         <div className="flex justify-between items-center mb-10">
-          <div className="flex items-center gap-4">
-            <div className="w-1.5 h-8 bg-indigo-600 rounded-full" />
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Recent Acquisitions</h2>
-          </div>
-          <Link href="/orders" className="p-3 px-6 bg-slate-50 rounded-2xl text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:bg-slate-100 transition-colors">View History</Link>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">My Orders</h3>
+          <Link href="/customer/orders" className="flex items-center gap-2 group">
+            <span className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] group-hover:translate-x-[-4px] transition-transform">See All History</span>
+            <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </Link>
         </div>
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-3 gap-4 mb-10">
+          {orderTabs.map((tab) => (
+            <button 
+              key={tab.label}
+              onClick={() => setActiveTab(tab.label)}
+              className={`p-6 rounded-3xl flex flex-col items-center gap-4 transition-all duration-300 relative overflow-hidden group ${
+                activeTab === tab.label 
+                  ? 'bg-slate-950 text-white shadow-2xl shadow-indigo-100 scale-105' 
+                  : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-indigo-600'
+              }`}
+            >
+              {tab.count > 0 && (
+                <div className={`absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full text-[10px] font-black ${
+                  activeTab === tab.label ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-600'
+                }`}>
+                  {tab.count}
+                </div>
+              )}
+              <tab.icon className={`w-7 h-7 ${activeTab === tab.label ? 'text-indigo-400' : 'group-hover:text-indigo-600'}`} />
+              <span className="text-[11px] font-black uppercase tracking-widest">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Dynamic Orders List based on Tab */}
+        <div className="space-y-4">
           {loading ? (
-            [1, 2].map(i => <div key={i} className="h-32 bg-white/40 animate-pulse rounded-[2.5rem]" />)
+             <div className="h-24 bg-slate-50 animate-pulse rounded-3xl" />
           ) : orders.length > 0 ? (
-            orders.map((order: any, idx) => (
-              <motion.div 
-                key={order._id}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/20 flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:border-indigo-100 transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-8">
-                  <div className="w-20 h-20 bg-slate-50 rounded-[1.5rem] flex items-center justify-center border border-slate-100 overflow-hidden shadow-inner group-hover:scale-105 transition-transform">
-                    <img src={order.orderItems[0]?.image} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-black text-slate-900 mb-2">Order #{order._id.slice(-6).toUpperCase()}</p>
-                    <div className="flex items-center gap-4">
-                      <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${order.isPaid ? 'bg-green-500 text-white shadow-lg shadow-green-100' : 'bg-orange-400 text-white shadow-lg shadow-orange-100'}`}>
-                        {order.isPaid ? 'Acquired' : 'Pending Payment'}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">{new Date(order.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</span>
+            orders
+              .filter((o: any) => {
+                if (activeTab === 'To Pay') return !o.isPaid;
+                if (activeTab === 'To Receive') return o.isPaid && !o.isDelivered;
+                if (activeTab === 'To Review') return o.isDelivered;
+                return true;
+              })
+              .slice(0, 2)
+              .map((order: any) => (
+                <div key={order._id} className="flex items-center justify-between p-6 bg-slate-50 rounded-[2rem] group hover:bg-white hover:shadow-lg transition-all border border-transparent hover:border-indigo-100">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-inner border border-white">
+                      <img src={order.orderItems[0]?.image} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-slate-900">Order #{order._id.slice(-6).toUpperCase()}</p>
+                      <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between md:justify-end gap-12 border-t md:border-t-0 pt-6 md:pt-0">
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1 font-mono">Value</p>
-                    <p className="text-2xl font-black text-slate-900 tracking-tighter">${order.totalPrice.toFixed(2)}</p>
+                  <div className="flex items-center gap-6">
+                    <span className="text-lg font-black text-indigo-600">${order.totalPrice.toFixed(0)}</span>
+                    <Link href={`/customer/orders/${order._id}`}>
+                      <button className="px-5 py-2.5 bg-white text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm group-hover:bg-slate-950 group-hover:text-white transition-all">Details</button>
+                    </Link>
                   </div>
-                  <Link href={`/orders/${order._id}`} className="w-14 h-14 bg-slate-50 rounded-[1.25rem] flex items-center justify-center text-slate-300 group-hover:bg-slate-900 group-hover:text-white transition-all duration-300 hover:rotate-45">
-                    <ArrowRight className="w-6 h-6" />
-                  </Link>
                 </div>
-              </motion.div>
-            ))
+              ))
           ) : (
-            <div className="bg-white/40 backdrop-blur-md p-24 rounded-[4rem] text-center border-2 border-dashed border-slate-100 flex flex-col items-center">
-              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-200">
-                <ShoppingBag className="w-10 h-10" />
-              </div>
-              <h3 className="text-2xl font-black text-slate-900 mb-2">Your shelf is quiet.</h3>
-              <p className="text-slate-400 font-medium mb-8">Begin your journey in the elite marketplace.</p>
-              <Link href="/products" className="p-5 px-10 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-slate-900 transition-all">Start Collecting</Link>
+            <div className="text-center py-10">
+              <p className="text-slate-400 text-sm font-medium">No orders in this section.</p>
             </div>
           )}
         </div>
       </section>
 
-      {/* Aesthetic Callout */}
+      {/* Stories / Featured Section */}
+      <section>
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-3">
+            <span className="w-1.5 h-8 bg-indigo-600 rounded-full" />
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Stories</h3>
+          </div>
+          <button className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-4 py-2 bg-indigo-50 rounded-xl">View All</button>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {stories.map((story, i) => (
+            <motion.div 
+              key={story.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden group cursor-pointer shadow-xl"
+            >
+              <img src={story.image} alt={story.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+              
+              {story.live && (
+                <div className="absolute top-6 right-6 px-3 py-1 bg-green-500 text-white rounded-full flex items-center gap-2 shadow-lg">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Live</span>
+                </div>
+              )}
+
+              <div className="absolute bottom-6 left-6 right-6">
+                <p className="text-white font-black text-xl leading-tight group-hover:translate-x-1 transition-transform">{story.title}</p>
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full mt-4 flex items-center justify-center text-white scale-0 group-hover:scale-100 transition-all duration-300">
+                  <ArrowRight className="w-5 h-5" />
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Categories Grid */}
+      <section>
+        <div className="flex justify-between items-end mb-8">
+          <div>
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Filter by Style</h3>
+            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Quick navigation</p>
+          </div>
+          <button className="text-indigo-600 text-[11px] font-black uppercase tracking-widest hover:underline transition-all">See All Categories</button>
+        </div>
+        
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-6">
+          {categories.map((cat, i) => (
+            <motion.div 
+              key={i}
+              whileHover={{ y: -5 }}
+              className="p-6 bg-white border border-slate-100 rounded-[2rem] flex flex-col items-center gap-4 cursor-pointer hover:shadow-2xl hover:shadow-indigo-100 transition-all border-none shadow-sm"
+            >
+              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform">
+                {cat.icon}
+              </div>
+              <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{cat.name}</span>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Aesthetic CTA Banner */}
       <div className="bg-slate-950 p-16 rounded-[4rem] text-white relative overflow-hidden shadow-3xl">
         <div className="absolute top-[-100%] right-[-20%] w-[80%] h-[200%] bg-indigo-600 rounded-full blur-[160px] opacity-20 pointer-events-none" />
         <div className="absolute bottom-[-50%] left-[0%] w-[50%] h-[100%] bg-violet-600 rounded-full blur-[140px] opacity-10 pointer-events-none" />
@@ -153,13 +314,13 @@ export default function CustomerDashboard() {
               <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
                 <div className="w-2 h-2 bg-indigo-400 rounded-full animate-ping" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Elite Matcher</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Personal Stylist</span>
             </div>
-            <h2 className="text-5xl font-black mb-6 tracking-tight leading-[1.1]">Curated artifacts refined for your <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">aesthetic.</span></h2>
-            <p className="text-slate-400 font-medium text-lg lg:pr-20">Our intelligence layer discovered 4 unique pieces that align with your recent acquisition profile.</p>
+            <h2 className="text-5xl font-black mb-6 tracking-tight leading-[1.1]">Curated for your <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">aesthetic.</span></h2>
+            <p className="text-slate-400 font-medium text-lg lg:pr-20">We identified 4 pieces that perfectly align with your acquisition profile.</p>
           </div>
           <Link href="/products" className="py-6 px-12 bg-white text-slate-950 rounded-[1.5rem] font-black text-[13px] uppercase tracking-widest hover:bg-indigo-400 transition-all shadow-2xl flex items-center justify-center gap-3 active:scale-95 group">
-            Discover Now <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+            Start Exploring <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
           </Link>
         </div>
       </div>
